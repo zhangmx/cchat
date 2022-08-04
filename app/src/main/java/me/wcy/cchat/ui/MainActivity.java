@@ -2,13 +2,15 @@ package me.wcy.cchat.ui;
 
 import android.content.Intent;
 import android.os.Bundle;
+
 import androidx.appcompat.app.AppCompatActivity;
+
 import android.text.method.ScrollingMovementMethod;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.TextView;
 
-import me.wcy.cchat.AppCache;
+import me.wcy.cchat.tools.AppCache;
 import me.wcy.cchat.R;
 import me.wcy.cchat.model.CMessage;
 import me.wcy.cchat.model.Callback;
@@ -37,10 +39,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         terminal.setMovementMethod(ScrollingMovementMethod.getInstance());
 
-        AppCache.getService().setReceiveMsgCallback(receiveMsgCallback);
+        AppCache.getClientService().setReceiveMsgCallback(receiveMsgCallback);
     }
 
-    private Callback<CMessage> receiveMsgCallback = new Callback<CMessage>() {
+    private final Callback<CMessage> receiveMsgCallback = new Callback<CMessage>() {
         @Override
         public void onEvent(int code, String msg, CMessage message) {
             terminal.append("[接收]" + message.getFrom() + ":" + message.getContent());
@@ -60,7 +62,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         message.setTo(etAccount.getText().toString());
         message.setType(MsgType.TEXT);
         message.setContent(etMessage.getText().toString());
-        AppCache.getService().sendMsg(message, (code, msg, aVoid) -> {
+
+        AppCache.getClientService().sendMsg(message, (code, msg, aVoid) -> {
             if (code == 200) {
                 etMessage.setText(null);
                 terminal.append("[发送]" + message.getContent());

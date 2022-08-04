@@ -1,11 +1,13 @@
-package me.wcy.cchat;
+package me.wcy.cchat.services;
 
 import android.app.Service;
 import android.content.Intent;
 import android.os.Handler;
 import android.os.IBinder;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+
 import android.util.Log;
 
 import com.google.gson.Gson;
@@ -29,19 +31,22 @@ import io.netty.handler.timeout.IdleState;
 import io.netty.handler.timeout.IdleStateEvent;
 import io.netty.handler.timeout.IdleStateHandler;
 import io.netty.util.ReferenceCountUtil;
+
+import me.wcy.cchat.tools.AppCache;
 import me.wcy.cchat.model.CMessage;
 import me.wcy.cchat.model.Callback;
 import me.wcy.cchat.model.LoginInfo;
 import me.wcy.cchat.model.LoginStatus;
 import me.wcy.cchat.model.MsgType;
+import me.wcy.cchat.model.ServerInfo;
 
 /**
  * Created by hzwangchenyan on 2017/12/26.
  */
-public class PushService extends Service {
-    private static final String TAG = "PushService";
-    private static final String HOST = "10.240.78.82";
-    private static final int PORT = 8300;
+public class ClientService extends Service {
+    private static final String TAG = "ClientService";
+//    private final String HOST = "10.240.78.82";
+//    private final int PORT = 8300;
 
     private SocketChannel socketChannel;
     private Callback<Void> loginCallback;
@@ -53,7 +58,7 @@ public class PushService extends Service {
     public void onCreate() {
         super.onCreate();
         handler = new Handler();
-        AppCache.setService(this);
+        AppCache.setClientService(this);
     }
 
     @Nullable
@@ -66,7 +71,7 @@ public class PushService extends Service {
         this.receiveMsgCallback = receiveMsgCallback;
     }
 
-    private void connect(@NonNull Callback<Void> callback) {
+    private void connect(String host, int port, @NonNull Callback<Void> callback) {
         if (status == LoginStatus.CONNECTING) {
             return;
         }
@@ -88,7 +93,7 @@ public class PushService extends Service {
                         pipeline.addLast(new ChannelHandle());
                     }
                 })
-                .connect(new InetSocketAddress(HOST, PORT))
+                .connect(new InetSocketAddress(host, port))
                 .addListener((ChannelFutureListener) future -> {
                     if (future.isSuccess()) {
                         socketChannel = (SocketChannel) future.channel();
@@ -104,20 +109,27 @@ public class PushService extends Service {
                 });
     }
 
-    public void login(String account, String token, Callback<Void> callback) {
+    public void login(String host, int port, String account, String token, Callback<Void> callback) {
         if (status == LoginStatus.CONNECTING || status == LoginStatus.LOGINING) {
             return;
         }
 
-        connect((code, msg, aVoid) -> {
+        connect(host, port, (code, msg, aVoid) -> {
             if (code == 200) {
+                updateStatus(LoginStatus.LOGINING);
+
+                ServerInfo serverInfo = new ServerInfo(host, port);
+                AppCache.setServerInfo(serverInfo);
+
                 LoginInfo loginInfo = new LoginInfo();
                 loginInfo.setAccount(account);
                 loginInfo.setToken(token);
+
                 CMessage loginMsg = new CMessage();
                 loginMsg.setFrom(account);
                 loginMsg.setType(MsgType.LOGIN);
                 loginMsg.setContent(loginInfo.toJson());
+
                 socketChannel.writeAndFlush(loginMsg.toJson())
                         .addListener((ChannelFutureListener) future -> {
                             if (future.isSuccess()) {
@@ -171,7 +183,7 @@ public class PushService extends Service {
         @Override
         public void channelInactive(ChannelHandlerContext ctx) throws Exception {
             super.channelInactive(ctx);
-            PushService.this.close();
+            ClientService.this.close();
             updateStatus(LoginStatus.UNLOGIN);
             retryLogin(3000);
         }
@@ -233,11 +245,17 @@ public class PushService extends Service {
         if (AppCache.getMyInfo() == null) {
             return;
         }
-        handler.postDelayed(() -> login(AppCache.getMyInfo().getAccount(), AppCache.getMyInfo().getToken(), (code, msg, aVoid) -> {
-            if (code != 200) {
-                retryLogin(mills);
-            }
-        }), mills);
+        handler.postDelayed(() -> login(
+                AppCache.getServerInfo().getHost(),
+                AppCache.getServerInfo().getPort(),
+
+                AppCache.getMyInfo().getAccount(),
+                AppCache.getMyInfo().getToken(),
+                (code, msg, aVoid) -> {
+                    if (code != 200) {
+                        retryLogin(mills);
+                    }
+                }), mills);
     }
 
     private void updateStatus(LoginStatus status) {

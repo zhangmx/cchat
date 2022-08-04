@@ -12,7 +12,9 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <service android:name=".PushService" />
+
+        <service android:name=".services.ClientService" />
+        <service android:name=".services.ServerService" />
 
         <activity android:name=".ui.MainActivity"
             android:exported="true">
