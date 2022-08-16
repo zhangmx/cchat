@@ -17,9 +17,9 @@ public class NettyChannelMap {
     }
 
     public static void remove(Channel channel) {
-        for (Map.Entry entry : map.entrySet()) {
+        for (Map.Entry<String, Channel> entry : map.entrySet()) {
             if (entry.getValue() == channel) {
-                String account = (String) entry.getKey();
+                String account = entry.getKey();
                 map.remove(account);
                 System.out.println(account + " leave");
                 break;

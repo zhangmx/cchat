@@ -4,6 +4,7 @@ import android.app.Service;
 import android.content.Intent;
 import android.os.Handler;
 import android.os.IBinder;
+import android.util.Log;
 
 import androidx.annotation.Nullable;
 
@@ -19,6 +20,7 @@ public class ServerService extends Service {
         super.onCreate();
         handler = new Handler();
         AppCache.setServerService(this);
+        Log.d("ServerService", "onCreate: ");
     }
 
     @Nullable

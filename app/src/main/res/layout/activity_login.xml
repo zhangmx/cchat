@@ -15,7 +15,8 @@
         android:hint="Account"
         android:inputType="textEmailAddress"
         android:singleLine="true"
-        android:textSize="14sp" />
+        android:textSize="14sp"
+        android:text="test1"/>
 
     <EditText
         android:id="@+id/et_token"
@@ -26,7 +27,8 @@
         android:hint="PASSWORD"
         android:inputType="textPassword"
         android:singleLine="true"
-        android:textSize="14sp" />
+        android:textSize="14sp"
+        android:text="123456"/>
 
     <Button
         android:id="@+id/btn_login"
@@ -65,6 +67,7 @@
         android:id="@+id/btn_server"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:onClick="onClick"
         android:text="localserver" />
 
 </LinearLayout>

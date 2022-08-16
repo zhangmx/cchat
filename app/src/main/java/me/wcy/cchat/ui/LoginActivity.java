@@ -5,6 +5,7 @@ import android.os.Bundle;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.Toast;
@@ -47,7 +48,7 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
 
     private void doServerAction() {
         int port = Integer.parseInt(etPort.getText().toString());
-
+        Log.d("LoginActivity", "doServerAction: " + port);
         //  启动服务器 create service
         AppCache.getServerService().startServer(port);
     }
